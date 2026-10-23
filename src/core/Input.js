@@ -49,13 +49,47 @@ export class Input {
   releaseLock() { if (this.pointerLocked) document.exitPointerLock?.(); }
 
   axis() {
-    const x = (this.keys.has('KeyD') ? 1 : 0) - (this.keys.has('KeyA') ? 1 : 0);
-    const z = (this.keys.has('KeyW') ? 1 : 0) - (this.keys.has('KeyS') ? 1 : 0);
-    const y = (this.keys.has('Space') ? 1 : 0) - (this.keys.has('KeyC') ? 1 : 0);
-    return { x, y, z };
+    const kx = (this.keys.has('KeyD') ? 1 : 0) - (this.keys.has('KeyA') ? 1 : 0);
+    const ky = (this.keys.has('Space') ? 1 : 0) - (this.keys.has('KeyC') ? 1 : 0);
+    const kz = (this.keys.has('KeyW') ? 1 : 0) - (this.keys.has('KeyS') ? 1 : 0);
+    const g = this._gp || { x: 0, y: 0, z: 0 };
+    const mix = (a, b) => Math.max(-1, Math.min(1, a + b));
+    return { x: mix(kx, g.x), y: mix(ky, g.y), z: mix(kz, g.z) };
   }
 
-  get sprinting() { return this.keys.has('ShiftLeft') || this.keys.has('ShiftRight'); }
+  get sprinting() {
+    return this.keys.has('ShiftLeft') || this.keys.has('ShiftRight') || Boolean(this._gp?.sprint);
+  }
+
+  /** 手柄轮询:左摇杆移动 + 扳机浮沉 + A 交互 + B/RT 冲刺 */
+  pollGamepad() {
+    const pads = typeof navigator !== 'undefined' && navigator.getGamepads ? navigator.getGamepads() : [];
+    const pad = Array.from(pads).find(Boolean);
+    if (!pad) { this._gp = null; return; }
+    const dz = (v) => (Math.abs(v) < 0.16 ? 0 : v);
+    const rise = (pad.buttons[7]?.value || 0) - (pad.buttons[6]?.value || 0); // RT 上浮 / LT 下潜
+    this._gp = {
+      x: dz(pad.axes[0] || 0),
+      y: dz(rise),
+      z: -dz(pad.axes[1] || 0),
+      sprint: (pad.buttons[10]?.pressed) || (pad.buttons[1]?.pressed) || (pad.buttons[7]?.value > 0.85),
+      lookX: dz(pad.axes[2] || 0),
+      lookY: dz(pad.axes[3] || 0),
+      interact: pad.buttons[0]?.pressed || false,
+    };
+    if (this._gp.interact && !this._gpInteractLatch) {
+      this._gpInteractLatch = true;
+      this.interactPressed = true;
+    } else if (!this._gp.interact) {
+      this._gpInteractLatch = false;
+    }
+  }
+
+  /** 手柄右摇杆视角增量(dx,dy),无手柄时为 0 */
+  gamepadLook() {
+    if (!this._gp) return { dx: 0, dy: 0 };
+    return { dx: this._gp.lookX * 14, dy: this._gp.lookY * 10 };
+  }
   get anyMovement() { return this.axis().x !== 0 || this.axis().y !== 0 || this.axis().z !== 0; }
 
   consumeMouse() {
@@ -69,4 +103,7 @@ export class Input {
     this.interactPressed = false;
     return v;
   }
+
+  /** 按住交互(键盘 E 或手柄 A) */
+  get interactHeld() { return this.keys.has('KeyE') || Boolean(this._gp?.interact); }
 }

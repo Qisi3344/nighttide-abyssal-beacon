@@ -203,10 +203,11 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// 点击画面锁定指针(游戏中)
+// 点击画面锁定指针(游戏中);标题屏任意点击预热音频
 canvas.addEventListener('click', () => {
   if (sm.state === States.PLAYING && !input.pointerLocked) input.requestLock();
 });
+uiRoot.addEventListener('click', () => audio.start(settings), { once: true });
 
 /* ============================== 主循环 ============================== */
 const clock = new THREE.Clock();
@@ -241,7 +242,7 @@ function frame(fromTimeout = false) {
       WORLD.core.z + Math.sin(titleCamAngle) * r,
     );
     app3d.camera.lookAt(WORLD.core.x, WORLD.seabedBase + 12, WORLD.core.z);
-    if (sm.state === States.TITLE && Math.random() < dt * 0.4) audio.ping?.();
+    if (sm.state === States.TITLE && Math.random() < dt * 0.25) audio.titleNote();
   } else if (sm.state === States.PLAYING || sm.state === States.PAUSED) {
     if (sm.state === States.PLAYING) {
       // ---- 终局演出:核心苏醒,相机环绕,铭文淡入 ----
@@ -270,7 +271,10 @@ function frame(fromTimeout = false) {
           sm.endRun('victory');
         }
       } else {
+      input.pollGamepad();
       cameraRig.consumeMouse(input.consumeMouse());
+      const gpLook = input.gamepadLook();
+      if (gpLook.dx || gpLook.dy) cameraRig.consumeMouse(gpLook);
       player.update(dt, input, cameraRig.yaw);
       cameraRig.update(dt, player.position, player.sprinting);
 
@@ -306,6 +310,7 @@ function frame(fromTimeout = false) {
         }
       }
       ui.setPredatorProximity(proximity);
+      ui.setEdgeWarning(player.atEdge);
 
       // 声纳导航:距最近未修信标 <70m 时周期轻 ping(音量随距离衰减)
       sonarTimer -= dt;
@@ -355,6 +360,13 @@ setInterval(() => {
 /* ============================== 启动 ============================== */
 // QA 调试钩子:自动化测试与验收用(只读引用,不含任何敏感数据)
 window.__nighttide = { sm, objectives, oxygen, player, gameplay, env, cameraRig, settings: () => settings };
+
+// 移除首屏加载指示
+const splash = document.getElementById('boot-splash');
+if (splash) {
+  splash.classList.add('gone');
+  setTimeout(() => splash.remove(), 900);
+}
 
 enterTitleScene();
 sm.go(States.TITLE);

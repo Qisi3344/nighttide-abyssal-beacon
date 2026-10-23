@@ -181,7 +181,7 @@ export class Gameplay {
     }
 
     // ---- 按住 E 推进 ----
-    const holding = this.nearby && this.nearby.kind !== 'info' && input.keys.has('KeyE');
+    const holding = this.nearby && this.nearby.kind !== 'info' && input.interactHeld;
     if (holding) {
       holdActive = true;
       const dur = this.nearby.kind === 'beacon' ? BEACON_REPAIR_TIME : CORE_AWAKEN_TIME;

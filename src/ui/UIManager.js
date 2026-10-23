@@ -43,6 +43,7 @@ export class UIManager {
         <div class="vignette-damage" id="vg-damage"></div>
         <div class="vignette-low" id="vg-low"></div>
         <div class="vignette-predator" id="vg-predator"></div>
+        <div class="vignette-edge" id="vg-edge"></div>
       </div>
 
       <div class="screen" id="screen-title">
@@ -105,7 +106,8 @@ export class UIManager {
           <p class="help-tip">
             收集<strong>光晶</strong>修复三座<strong>信标</strong>;信标点亮处,深渊守卫不敢靠近。<br>
             氧气就是生命——发光的<strong>氧藻丛</strong>可以回充。<br>
-            那条<em>品红眼睛</em>的东西循光而来:熄灯静止能躲过它,冲刺的声响会把它引来。
+            那条<em>品红眼睛</em>的东西循光而来:熄灯静止能躲过它,冲刺的声响会把它引来。<br>
+            手柄同样支持:左摇杆游动 / RT·LT 浮沉 / A 交互 / B 冲刺 / 右摇杆视角。
           </p>
           <button class="nt-btn" id="btn-help-back">返 回</button>
         </div>
@@ -137,7 +139,7 @@ export class UIManager {
       hud: $('hud'), objText: $('obj-text'), crystalCount: $('crystal-count'),
       o2Arc: $('o2-arc'), o2Val: $('o2-val'), o2Ring: $('o2-ring'), depthVal: $('depth-val'), o2Refill: $('o2-refill'),
       compass: $('compass-strip'), interact: $('interact'), interactText: $('interact-text'), holdFill: $('hold-fill'),
-      spotWarn: $('spot-warn'), vgDamage: $('vg-damage'), vgLow: $('vg-low'), vgPredator: $('vg-predator'),
+      spotWarn: $('spot-warn'), vgDamage: $('vg-damage'), vgLow: $('vg-low'), vgPredator: $('vg-predator'), vgEdge: $('vg-edge'),
       cinematic: $('cinematic-text'), canvas: document.getElementById('game-canvas'),
       fadeBlack: $('fade-black'),
       lorePanel: $('lore-panel'), loreTitle: $('lore-title'), loreText: $('lore-text'),
@@ -318,6 +320,11 @@ export class UIManager {
   /** 守卫接近度恐惧反馈:0(无)~1(贴脸) */
   setPredatorProximity(v) {
     this.el.vgPredator.style.opacity = v > 0 ? String(Math.min(0.9, v)) : '0';
+  }
+
+  /** 海沟边界反馈:接近边界时蓝色水流感 */
+  setEdgeWarning(on) {
+    this.el.vgEdge.style.opacity = on ? '0.8' : '0';
   }
 
   setPausedBlur(on) {

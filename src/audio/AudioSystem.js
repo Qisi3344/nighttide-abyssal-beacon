@@ -86,6 +86,13 @@ export class AudioSystem {
   sonar(proximity01) {
     this._tone(520 + proximity01 * 160, { type: 'sine', a: 0.004, d: 0.4, peak: 0.03 + proximity01 * 0.06, sweep: 330 });
   }
+
+  /** 标题琶音:五声音阶缓慢游走,标题屏的呼吸感 */
+  titleNote() {
+    const scale = [220, 247.5, 293.3, 330, 392, 440];
+    const f = scale[Math.floor(Math.random() * scale.length)] * (Math.random() < 0.3 ? 0.5 : 1);
+    this._tone(f, { type: 'sine', a: 0.6, d: 3.2, peak: 0.05, bus: this.ambBus });
+  }
   ui() { this._tone(520, { type: 'square', a: 0.002, d: 0.06, peak: 0.05 }); }
   bubble() { this._tone(300 + Math.random() * 500, { type: 'sine', a: 0.005, d: 0.12, peak: 0.05, sweep: 900 + Math.random() * 400 }); }
 

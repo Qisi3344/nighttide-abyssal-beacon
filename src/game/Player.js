@@ -79,6 +79,7 @@ export class Player {
       this.velocity.y = Math.min(this.velocity.y, 0);
     }
     const rEdge = Math.hypot(this.position.x, this.position.z);
+    this.atEdge = rEdge > 186; // 接近边界(供 UI/音效反馈)
     if (rEdge > 192) {
       const k = 192 / rEdge;
       this.position.x *= k; this.position.z *= k;
