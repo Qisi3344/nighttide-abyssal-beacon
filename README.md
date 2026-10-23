@@ -66,7 +66,7 @@ screenshots/            实机截图
 docs/                   设计与架构细节
 ```
 
-详见 [docs/DESIGN.md](docs/DESIGN.md)(玩法与关卡设计)与 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)(模块与扩展指南)。
+详见 [docs/DESIGN.md](docs/DESIGN.md)(玩法与关卡设计)、[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)(模块与扩展指南)与 [docs/DEVLOG.md](docs/DEVLOG.md)(开发时间线与修复记录)。
 
 ## 已验证清单(实测)
 
