@@ -69,6 +69,7 @@ const audio = new AudioSystem();
 
 // 计分
 let crystalsTotal = 0;
+let cineState = null; // 终局演出状态 { t }
 bus.on('sfx:pickup', () => { crystalsTotal++; audio.pickup(); if (sm.runStats) sm.runStats.crystals = crystalsTotal; });
 bus.on('sfx:repair-tick', () => audio.repairTick());
 bus.on('sfx:beacon', () => { audio.beacon(); if (sm.runStats) sm.runStats.beaconsLit++; });
@@ -143,6 +144,9 @@ function startRun() {
   cameraRig.pitch = -0.15;
   cameraRig._pos.set(player.position.x, player.position.y + 30, player.position.z + 40);
   crystalsTotal = 0;
+  cineState = null;
+  ui.setPausedBlur(false);
+  ui.hideCinematic();
   sm.startRun();
   sm.runStats.crystalsTotal = 0;
   ui.hideAllScreens();
@@ -165,9 +169,14 @@ bus.on('state:changed', ({ next }) => {
   if (next === States.PAUSED) {
     ui.showScreen('pause');
     ui.showHUD(true);
+    ui.setPausedBlur(true);
     input.releaseLock();
+  } else if (next === States.PLAYING) {
+    ui.setPausedBlur(false);
   } else if (next === States.VICTORY || next === States.DEFEATED) {
     input.releaseLock();
+    ui.hideCinematic();
+    ui.setPausedBlur(true);
     const stats = { ...sm.runStats, crystalsTotal };
     ui.showEnd(next === States.VICTORY ? 'victory' : 'defeat', stats, save.saveBest(stats));
     ui.showHUD(false);
@@ -223,6 +232,32 @@ function frame(fromTimeout = false) {
     if (sm.state === States.TITLE && Math.random() < dt * 0.4) audio.ping?.();
   } else if (sm.state === States.PLAYING || sm.state === States.PAUSED) {
     if (sm.state === States.PLAYING) {
+      // ---- 终局演出:核心苏醒,相机环绕,铭文淡入 ----
+      if (objectives.complete && !cineState) {
+        cineState = { t: 0 };
+        input.releaseLock();
+        ui.showCinematic('潮水会退,灯不会灭。');
+      }
+      if (cineState) {
+        cineState.t += dt;
+        const k = Math.min(1, cineState.t / 1.6);
+        const ease = 1 - Math.pow(1 - k, 3);
+        const ang = cineState.t * 0.45;
+        const R = 26 - ease * 10;
+        const target = new THREE.Vector3(
+          WORLD.core.x + Math.sin(ang) * R,
+          WORLD.seabedBase + 15 + Math.sin(cineState.t * 0.7) * 2,
+          WORLD.core.z + Math.cos(ang) * R,
+        );
+        app3d.camera.position.lerp(target, Math.min(1, dt * 2.2));
+        app3d.camera.lookAt(WORLD.core.x, WORLD.seabedBase + 13, WORLD.core.z);
+        env.update(dt, t); particles.update(dt, t); flora.update(dt, t);
+        particles.spawnBubbles(WORLD.core.x + (Math.random() - 0.5) * 8, WORLD.seabedBase + 10, WORLD.core.z + (Math.random() - 0.5) * 8, 3, 1.2);
+        if (cineState.t > 4.6) {
+          cineState = null;
+          sm.endRun('victory');
+        }
+      } else {
       cameraRig.consumeMouse(input.consumeMouse());
       player.update(dt, input, cameraRig.yaw);
       cameraRig.update(dt, player.position, player.sprinting);
@@ -249,15 +284,18 @@ function frame(fromTimeout = false) {
       const litMap = new Map(WORLD.beacons.map(b => [b.id, env.beaconViews.get(b.id).lit]));
       ui.updateCompass(cameraRig.yaw, player.position, litMap, objectives.coreUnlocked);
 
-      // 胜负
-      if (!alive) {
-        sm.endRun('defeat');
-      } else if (objectives.complete) {
-        sm.endRun('victory');
-      }
+      // 守卫接近恐惧反馈(品红边缘脉动)
+      const predDist = gameplay.predatorModel
+        ? gameplay.predatorModel.group.position.distanceTo(player.position) : 999;
+      const menacing = ['CHASE', 'LUNGE'].includes(gameplay.brain.mode);
+      const proximity = menacing ? Math.max(0, 1 - predDist / 26) : 0;
+      ui.setPredatorProximity(proximity);
+
+      // 胜负(胜利由终局演出收尾)
+      if (!alive) sm.endRun('defeat');
+      } // /cinematic else
     } else {
-      // 暂停:仅渲染静态帧
-      cameraRig.consumeMouse({ dx: 0, dy: 0 });
+      // 暂停:仅渲染(画面已 CSS 景深模糊)
     }
   }
 

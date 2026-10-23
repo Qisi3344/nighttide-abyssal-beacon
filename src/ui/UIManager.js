@@ -42,6 +42,7 @@ export class UIManager {
         <div class="spot-warn" id="spot-warn">它看见你了</div>
         <div class="vignette-damage" id="vg-damage"></div>
         <div class="vignette-low" id="vg-low"></div>
+        <div class="vignette-predator" id="vg-predator"></div>
       </div>
 
       <div class="screen" id="screen-title">
@@ -122,6 +123,7 @@ export class UIManager {
       </div>
 
       <div class="intro-text" id="intro-text">海面之下 640 米 —— 三座信标都熄灭了</div>
+      <div class="cinematic-text" id="cinematic-text"></div>
     `;
 
     const $ = (id) => this.root.querySelector('#' + id);
@@ -129,7 +131,8 @@ export class UIManager {
       hud: $('hud'), objText: $('obj-text'), crystalCount: $('crystal-count'),
       o2Arc: $('o2-arc'), o2Val: $('o2-val'), o2Ring: $('o2-ring'), depthVal: $('depth-val'), o2Refill: $('o2-refill'),
       compass: $('compass-strip'), interact: $('interact'), interactText: $('interact-text'), holdFill: $('hold-fill'),
-      spotWarn: $('spot-warn'), vgDamage: $('vg-damage'), vgLow: $('vg-low'),
+      spotWarn: $('spot-warn'), vgDamage: $('vg-damage'), vgLow: $('vg-low'), vgPredator: $('vg-predator'),
+      cinematic: $('cinematic-text'), canvas: document.getElementById('game-canvas'),
       screens: {
         title: $('screen-title'), pause: $('screen-pause'), settings: $('screen-settings'),
         help: $('screen-help'), end: $('screen-end'),
@@ -225,7 +228,6 @@ export class UIManager {
 
   /** camYaw:相机朝向角(rad,与 atan2(sin,cos) 同系);玩家位置决定标记方位 */
   updateCompass(camYaw, playerPos, beaconLitState, coreUnlocked) {
-    const W = this.el.compass.parentElement.clientWidth;
     const halfFov = Math.PI * 0.75; // 罗盘覆盖 ±135°
     const marks = this.el.compass.children;
     for (const m of marks) {
@@ -246,6 +248,20 @@ export class UIManager {
       while (rel < -Math.PI) rel += Math.PI * 2;
       if (Math.abs(rel) > halfFov) { m.style.display = 'none'; continue; }
       m.style.left = (50 + (rel / halfFov) * 48) + '%';
+      // 距离角标
+      const dist = Math.round(Math.hypot(tx - playerPos.x, tz - playerPos.z));
+      if (!m._dist) {
+        m._dist = document.createElement('span');
+        m._dist.className = 'dist';
+        this.el.compass.appendChild(m._dist);
+      }
+      m._dist.textContent = dist + 'm';
+      m._dist.style.left = m.style.left;
+      m._dist.style.display = 'block';
+    }
+    // 清理隐藏标记的距离角标
+    for (const m of marks) {
+      if (m.style.display === 'none' && m._dist) m._dist.style.display = 'none';
     }
   }
 
@@ -274,6 +290,25 @@ export class UIManager {
   showIntro() {
     this.el.intro.classList.add('show');
     setTimeout(() => this.el.intro.classList.remove('show'), 5200);
+  }
+
+  /** 守卫接近度恐惧反馈:0(无)~1(贴脸) */
+  setPredatorProximity(v) {
+    this.el.vgPredator.style.opacity = v > 0 ? String(Math.min(0.9, v)) : '0';
+  }
+
+  setPausedBlur(on) {
+    this.el.canvas.classList.toggle('paused', on);
+  }
+
+  /** 终局演出字幕 */
+  showCinematic(text) {
+    const el = this.el.cinematic;
+    el.textContent = text;
+    el.classList.add('show');
+  }
+  hideCinematic() {
+    this.el.cinematic.classList.remove('show');
   }
 
   showEnd(outcome, stats, best) {
