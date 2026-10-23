@@ -10,6 +10,8 @@
 
 ![标题画面](screenshots/01-title.png)
 
+![游玩实录](screenshots/gameplay.gif)
+
 ## 快速开始
 
 ```bash
