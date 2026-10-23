@@ -6,6 +6,8 @@ import * as THREE from 'three';
  * 发光眼(品红)= 危险信号,与青色信标光形成敌我色彩语言。
  */
 const SEG_COUNT = 14;
+const UP = new THREE.Vector3(0, 1, 0);
+const _m4 = new THREE.Matrix4();
 
 export class PredatorModel {
   constructor() {
@@ -120,7 +122,7 @@ export class PredatorModel {
     const sway = Math.sin(this._phase) * (0.25 + speed * 0.08);
     this.group.rotation.z = sway * 0.25;
 
-    // 节链跟随:每节收敛到前一节后方
+    // 节链跟随:每节以阻尼方式收敛到前一节后方(急转弯时身体拉成弧线,避免折线穿插)
     let prevPos = this.head.getWorldPosition(new THREE.Vector3());
     let prevDir = forward.clone();
     for (let i = 0; i < this.segments.length; i++) {
@@ -129,16 +131,23 @@ export class PredatorModel {
       const toPrev = new THREE.Vector3().subVectors(prevPos, segPos);
       const dist = toPrev.length();
       if (dist > this._segSpacing) {
-        const dirN = toPrev.normalize();
+        const dirN = toPrev.clone().normalize();
+        // 收敛量阻尼:单帧最多吃掉超额距离的 55%,弯曲自然传递
+        const overshoot = dist - this._segSpacing;
+        segPos.addScaledVector(dirN, overshoot * 0.55);
         // 带正弦偏移,产生波动传递
         const wave = Math.sin(this._phase - i * 0.8) * 0.35;
         const side = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), dirN).normalize();
-        segPos.addScaledVector(dirN, dist - this._segSpacing);
         segPos.addScaledVector(side, wave * dt * speed * 0.4);
-        // 世界坐标回写到 group 本地:为简化,节节点挂在外层 group 下,需要逆变换
-        const local = this.group.worldToLocal(segPos);
+        // 世界坐标回写(节节点挂在外层 group 下,逆变换回本地)
+        const local = this.group.worldToLocal(segPos.clone());
         s.group.position.copy(local);
-        s.group.lookAt(this.group.localToWorld(prevPos.clone()));
+        const lookTarget = this.group.localToWorld(prevPos.clone());
+        // 平滑朝向:限制单帧转角,避免急转时节段硬折
+        const desired = new THREE.Quaternion();
+        _m4.lookAt(s.group.getWorldPosition(new THREE.Vector3()), lookTarget, UP);
+        desired.setFromRotationMatrix(_m4);
+        s.group.quaternion.slerp(desired, Math.min(1, dt * 7));
       }
       prevPos = segPos;
       prevDir = toPrev;
