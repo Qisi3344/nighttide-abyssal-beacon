@@ -1,0 +1,191 @@
+@import '@fontsource/orbitron/700.css';
+@import '@fontsource/orbitron/900.css';
+@import '@fontsource/rajdhani/400.css';
+@import '@fontsource/rajdhani/500.css';
+@import '@fontsource/rajdhani/600.css';
+
+:root {
+  --cyan: #35f0ff;
+  --cyan-dim: #1a8fa3;
+  --magenta: #ff3fae;
+  --amber: #ffb35c;
+  --ink: #03121c;
+  --panel: rgba(6, 24, 34, 0.72);
+  --panel-line: rgba(53, 240, 255, 0.28);
+  --text: #cfeef5;
+  --text-dim: #6fa5b3;
+  --font-title: 'Orbitron', 'Segoe UI', sans-serif;
+  --font-body: 'Rajdhani', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { width: 100%; height: 100%; overflow: hidden; background: #020a12; }
+
+#app { position: fixed; inset: 0; }
+
+#game-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+#ui-root { position: absolute; inset: 0; pointer-events: none; font-family: var(--font-body); color: var(--text); }
+#ui-root .clickable { pointer-events: auto; }
+
+/* ---------- 通用面板 ---------- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 32px rgba(0, 0, 0, 0.5), inset 0 0 24px rgba(53, 240, 255, 0.04);
+}
+
+.nt-btn {
+  display: block; width: 100%;
+  font-family: var(--font-body); font-size: 19px; font-weight: 600;
+  letter-spacing: 0.35em; text-indent: 0.35em;
+  color: var(--text); background: rgba(10, 42, 54, 0.55);
+  border: 1px solid var(--panel-line); border-radius: 6px;
+  padding: 12px 0; margin: 10px 0; cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: center;
+}
+.nt-btn:hover { background: rgba(53, 240, 255, 0.14); border-color: var(--cyan); color: #fff; box-shadow: 0 0 18px rgba(53, 240, 255, 0.25); }
+.nt-btn:active { transform: translateY(1px); }
+.nt-btn.danger { border-color: rgba(255, 63, 174, 0.4); }
+.nt-btn.danger:hover { background: rgba(255, 63, 174, 0.12); border-color: var(--magenta); box-shadow: 0 0 18px rgba(255, 63, 174, 0.25); }
+
+/* ---------- 标题屏 ---------- */
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.5s ease; }
+.screen.show { opacity: 1; visibility: visible; }
+
+.title-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 30%, rgba(2, 10, 18, 0.88) 100%); }
+
+.title-logo { position: relative; text-align: center; margin-bottom: 8px; }
+.title-logo .cn {
+  font-family: var(--font-body); font-weight: 600; font-size: 92px; letter-spacing: 0.42em; text-indent: 0.42em;
+  color: #eafcff;
+  text-shadow: 0 0 24px rgba(53, 240, 255, 0.55), 0 0 80px rgba(53, 240, 255, 0.3);
+}
+.title-logo .en {
+  font-family: var(--font-title); font-weight: 900; font-size: 30px; letter-spacing: 0.85em; text-indent: 0.85em;
+  color: var(--cyan); margin-top: 6px;
+  text-shadow: 0 0 18px rgba(53, 240, 255, 0.6);
+}
+.title-logo .sub {
+  font-size: 17px; letter-spacing: 0.7em; text-indent: 0.7em; color: var(--text-dim); margin-top: 16px;
+}
+.title-rule { width: 380px; height: 1px; margin: 26px auto 30px; background: linear-gradient(90deg, transparent, var(--cyan-dim), transparent); position: relative; }
+.title-rule::after { content: ''; position: absolute; left: 50%; top: -2px; width: 5px; height: 5px; transform: translateX(-50%) rotate(45deg); background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+
+.title-menu { width: 300px; }
+.title-foot { position: absolute; bottom: 26px; width: 100%; text-align: center; font-size: 13px; letter-spacing: 0.3em; color: rgba(111, 165, 179, 0.55); }
+
+/* ---------- 开场字幕 ---------- */
+.intro-text {
+  position: absolute; bottom: 18%; width: 100%; text-align: center;
+  font-size: 22px; letter-spacing: 0.4em; text-indent: 0.4em; color: var(--text);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
+  opacity: 0; transition: opacity 1.2s ease;
+}
+.intro-text.show { opacity: 1; }
+
+/* ---------- HUD ---------- */
+#hud { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s; }
+#hud.show { opacity: 1; }
+
+.hud-tl { position: absolute; top: 22px; left: 24px; display: flex; flex-direction: column; gap: 8px; }
+.hud-objective { max-width: 460px; padding: 10px 16px; font-size: 16px; letter-spacing: 0.12em; }
+.hud-objective .tag { color: var(--cyan); font-weight: 600; margin-right: 10px; font-size: 13px; letter-spacing: 0.25em; }
+.hud-crystals { padding: 8px 16px; font-size: 17px; display: flex; align-items: center; gap: 10px; }
+.crystal-icon { width: 14px; height: 14px; transform: rotate(45deg); background: var(--cyan); box-shadow: 0 0 12px var(--cyan); display: inline-block; }
+
+.hud-bl { position: absolute; left: 26px; bottom: 24px; display: flex; align-items: flex-end; gap: 14px; }
+.o2-ring { position: relative; width: 110px; height: 110px; }
+.o2-ring svg { transform: rotate(-90deg); }
+.o2-ring .label {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: var(--font-title); font-weight: 700; font-size: 24px; color: var(--text);
+}
+.o2-ring .label small { font-family: var(--font-body); font-size: 11px; letter-spacing: 0.3em; color: var(--text-dim); margin-top: 2px; }
+.o2-ring.warn .label { color: var(--amber); }
+.o2-ring.crit .label { color: var(--magenta); }
+.o2-depth { padding: 8px 14px; font-size: 14px; letter-spacing: 0.2em; color: var(--text-dim); }
+.o2-depth b { color: var(--text); font-family: var(--font-title); font-size: 15px; }
+.o2-refill { padding: 6px 14px; font-size: 14px; letter-spacing: 0.25em; color: #9dffb8; border-color: rgba(82, 255, 122, 0.35); display: none; }
+.o2-refill.on { display: block; animation: pulse-soft 1.6s infinite; }
+@keyframes pulse-soft { 50% { opacity: 0.55; } }
+
+/* 信标罗盘:顶部中央 */
+.compass { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 460px; height: 34px; overflow: hidden; }
+.compass .strip { position: absolute; inset: 0; }
+.compass .mark { position: absolute; top: 4px; width: 10px; height: 10px; transform: translateX(-50%) rotate(45deg); }
+.compass .mark.lit { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+.compass .mark.unlit { background: transparent; border: 1.5px solid var(--cyan-dim); }
+.compass .mark.core { border-radius: 50%; background: transparent; border: 2px solid var(--amber); }
+.compass .center { position: absolute; left: 50%; top: 26px; width: 2px; height: 8px; background: var(--text-dim); transform: translateX(-50%); }
+
+/* 交互提示 */
+.hud-interact {
+  position: absolute; left: 50%; bottom: 20%; transform: translateX(-50%);
+  padding: 12px 26px; font-size: 18px; letter-spacing: 0.2em;
+  display: none; text-align: center;
+}
+.hud-interact.show { display: block; }
+.hud-interact .key {
+  font-family: var(--font-title); font-size: 14px; color: var(--ink);
+  background: var(--cyan); padding: 2px 8px; border-radius: 4px; margin: 0 4px;
+  box-shadow: 0 0 12px rgba(53, 240, 255, 0.5);
+}
+.hold-bar { width: 100%; height: 4px; margin-top: 10px; background: rgba(255, 255, 255, 0.12); border-radius: 2px; overflow: hidden; }
+.hold-bar i { display: block; height: 100%; width: 0%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); transition: width 0.05s linear; }
+
+/* 警告 */
+.spot-warn {
+  position: absolute; top: 32%; width: 100%; text-align: center;
+  font-family: var(--font-title); font-size: 22px; letter-spacing: 0.5em; text-indent: 0.5em;
+  color: var(--magenta); text-shadow: 0 0 20px rgba(255, 63, 174, 0.7);
+  opacity: 0; pointer-events: none;
+}
+.spot-warn.flash { animation: spot-flash 2.2s ease-out; }
+@keyframes spot-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+.vignette-damage { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, transparent 40%, rgba(255, 30, 80, 0.45) 100%); transition: opacity 0.12s; }
+.vignette-low { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(255, 120, 40, 0.28) 100%); transition: opacity 0.8s; }
+
+/* ---------- 覆盖菜单(暂停/结算/设置/帮助) ---------- */
+.overlay-dim { position: absolute; inset: 0; background: rgba(2, 10, 18, 0.6); backdrop-filter: blur(3px); }
+.overlay-card { position: relative; width: min(480px, 88vw); padding: 34px 38px; }
+.overlay-card h2 { font-family: var(--font-title); font-weight: 700; font-size: 26px; letter-spacing: 0.4em; text-indent: 0.4em; text-align: center; color: var(--cyan); margin-bottom: 4px; text-shadow: 0 0 16px rgba(53, 240, 255, 0.4); }
+.overlay-card .sub-title { text-align: center; font-size: 14px; letter-spacing: 0.4em; color: var(--text-dim); margin-bottom: 22px; }
+.overlay-card h2.magenta { color: var(--magenta); text-shadow: 0 0 16px rgba(255, 63, 174, 0.4); }
+
+.stat-row { display: flex; justify-content: space-between; padding: 9px 4px; border-bottom: 1px solid rgba(53, 240, 255, 0.1); font-size: 16px; letter-spacing: 0.1em; }
+.stat-row b { font-family: var(--font-title); font-size: 15px; color: var(--cyan); }
+.stat-row b.good { color: #9dffb8; }
+.stat-row b.bad { color: var(--magenta); }
+
+/* 设置 */
+.setting-row { margin: 18px 0; }
+.setting-row label { display: block; font-size: 14px; letter-spacing: 0.3em; color: var(--text-dim); margin-bottom: 8px; }
+.setting-row input[type="range"] { width: 100%; accent-color: var(--cyan); cursor: pointer; }
+.seg { display: flex; gap: 8px; }
+.seg button {
+  flex: 1; font-family: var(--font-body); font-size: 15px; font-weight: 500; letter-spacing: 0.2em;
+  padding: 8px 0; background: rgba(10, 42, 54, 0.55); color: var(--text-dim);
+  border: 1px solid var(--panel-line); border-radius: 5px; cursor: pointer; transition: all 0.15s;
+}
+.seg button.on { background: rgba(53, 240, 255, 0.16); color: #fff; border-color: var(--cyan); }
+
+/* 帮助 */
+.help-grid { display: grid; grid-template-columns: auto 1fr; gap: 9px 18px; font-size: 16px; margin: 6px 0 10px; }
+.help-grid .k { font-family: var(--font-title); font-size: 12px; color: var(--ink); background: var(--cyan-dim); padding: 3px 9px; border-radius: 4px; text-align: center; align-self: center; }
+.help-tip { font-size: 14px; color: var(--text-dim); line-height: 1.7; letter-spacing: 0.06em; }
+.help-tip em { color: var(--amber); font-style: normal; }
+.help-tip strong { color: var(--cyan); }
+
+/* 小屏适配 */
+@media (max-width: 720px) {
+  .title-logo .cn { font-size: 54px; }
+  .title-logo .en { font-size: 18px; }
+  .compass { width: 280px; }
+  .hud-objective { max-width: 300px; font-size: 14px; }
+}
