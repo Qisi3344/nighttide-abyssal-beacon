@@ -129,6 +129,7 @@ export class UIManager {
         <div class="lore-title" id="lore-title"></div>
         <div class="lore-text" id="lore-text"></div>
       </div>
+      <div class="fade-black" id="fade-black"></div>
     `;
 
     const $ = (id) => this.root.querySelector('#' + id);
@@ -138,6 +139,7 @@ export class UIManager {
       compass: $('compass-strip'), interact: $('interact'), interactText: $('interact-text'), holdFill: $('hold-fill'),
       spotWarn: $('spot-warn'), vgDamage: $('vg-damage'), vgLow: $('vg-low'), vgPredator: $('vg-predator'),
       cinematic: $('cinematic-text'), canvas: document.getElementById('game-canvas'),
+      fadeBlack: $('fade-black'),
       lorePanel: $('lore-panel'), loreTitle: $('lore-title'), loreText: $('lore-text'),
       screens: {
         title: $('screen-title'), pause: $('screen-pause'), settings: $('screen-settings'),
@@ -304,6 +306,11 @@ export class UIManager {
   }
 
   showIntro() {
+    // 开场:黑幕盖住 → 淡入 + 字幕
+    const fb = this.el.fadeBlack;
+    fb.classList.add('cover');
+    void fb.offsetWidth;
+    fb.classList.remove('cover');
     this.el.intro.classList.add('show');
     setTimeout(() => this.el.intro.classList.remove('show'), 5200);
   }

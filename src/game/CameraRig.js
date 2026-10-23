@@ -13,7 +13,11 @@ export class CameraRig {
     this._lookTarget = new THREE.Vector3();
     this.sensitivity = 1.0;
     this.fovBoost = 0;
+    this.entryT = 0; // >0 时用慢阻尼(入场俯冲)
   }
+
+  /** 开启入场俯冲(慢阻尼 2.4 秒) */
+  beginEntry() { this.entryT = 2.4; }
 
   consumeMouse(mouse) {
     this.yaw -= mouse.dx * 0.0022 * this.sensitivity;
@@ -37,7 +41,10 @@ export class CameraRig {
     if (ideal.y < ground) ideal.y = ground;
     ideal.y = Math.min(ideal.y, 40);
 
-    this._pos.lerp(ideal, 1 - Math.exp(-9 * dt));
+    // 入场期用慢阻尼(俯冲仪式感),之后恢复正常跟手
+    const damping = this.entryT > 0 ? 2.2 : 9;
+    if (this.entryT > 0) this.entryT -= dt;
+    this._pos.lerp(ideal, 1 - Math.exp(-damping * dt));
     this.camera.position.copy(this._pos);
     this.camera.lookAt(focus);
 

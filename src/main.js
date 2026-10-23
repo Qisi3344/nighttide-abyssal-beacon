@@ -157,6 +157,7 @@ function startRun() {
   cineState = null;
   ui.setPausedBlur(false);
   ui.hideCinematic();
+  cameraRig.beginEntry(); // 入场俯冲:相机慢阻尼下潜到玩家背后
   sm.startRun();
   sm.runStats.crystalsTotal = 0;
   ui.hideAllScreens();
