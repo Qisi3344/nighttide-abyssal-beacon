@@ -41,16 +41,24 @@ export class Gameplay {
     const haloGeo = new THREE.SphereGeometry(1.1, 10, 8);
     const haloMat = new THREE.MeshBasicMaterial({ color: 0x35f0ff, transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false });
     for (const def of WORLD.crystals) {
-      const g = new THREE.Group();
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.castShadow = true;
-      const halo = new THREE.Mesh(haloGeo, haloMat);
-      g.add(mesh, halo);
-      const groundY = this.terrain.heightAt(def.x, def.z);
-      g.position.set(def.x, Math.max(def.y, groundY + 1.2), def.z);
-      this.scene.add(g);
-      this.crystalViews.push({ group: g, mesh, taken: false, phase: Math.random() * 7, bubbleTimer: Math.random() * 2 });
+      this._addCrystal(def, geo, mat, haloGeo, haloMat, false);
     }
+    // 隐藏彩蛋:黑潮之心(品红,稍大)
+    const secretMat = new THREE.MeshStandardMaterial({ color: 0x48102c, emissive: 0xff3fae, emissiveIntensity: 2.4, roughness: 0.2, flatShading: true });
+    const secretHalo = new THREE.MeshBasicMaterial({ color: 0xff3fae, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false });
+    this._addCrystal(WORLD.secretCrystal, new THREE.OctahedronGeometry(0.8, 0), secretMat, haloGeo, secretHalo, true);
+  }
+
+  _addCrystal(def, geo, mat, haloGeo, haloMat, secret) {
+    const g = new THREE.Group();
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = true;
+    const halo = new THREE.Mesh(haloGeo, haloMat);
+    g.add(mesh, halo);
+    const groundY = this.terrain.heightAt(def.x, def.z);
+    g.position.set(def.x, Math.max(def.y, groundY + 1.2), def.z);
+    this.scene.add(g);
+    this.crystalViews.push({ group: g, mesh, taken: false, phase: Math.random() * 7, bubbleTimer: Math.random() * 2, secret });
   }
 
   _buildPredator() {
@@ -97,8 +105,12 @@ export class Gameplay {
       if (d < 2.4) {
         c.taken = true;
         c.group.visible = false;
-        this.objectives.onCrystalCollected();
-        this.bus.emit('sfx:pickup', {});
+        if (c.secret) {
+          this.bus.emit('game:secret-found', {});
+        } else {
+          this.objectives.onCrystalCollected();
+          this.bus.emit('sfx:pickup', {});
+        }
       } else if (d < 6) {
         magnetHint = c;
         c.group.position.lerp(new THREE.Vector3(pos.x, c.group.position.y, pos.z), dt * 0.06); // 远程微磁吸引导
@@ -180,8 +192,10 @@ export class Gameplay {
         beacons: beaconsLit,
       });
       const speedMap = { [PredatorMode.PATROL]: 3.0, [PredatorMode.INVESTIGATE]: 4.4, [PredatorMode.CHASE]: 7.4, [PredatorMode.LUNGE]: 12.5, [PredatorMode.RETREAT]: 5.8 };
+      // 终局狂暴:三信标齐后守卫提速(压迫终局节奏)
+      const rage = this.objectives.coreUnlocked ? 1.28 : 1.0;
       const target = this.brain.target || WORLD.predatorWaypoints[0];
-      model._lastFacing = model.update(dt, new THREE.Vector3(target.x, target.y, target.z), speedMap[this.brain.mode] || 3, this.brain.dangerLevel);
+      model._lastFacing = model.update(dt, new THREE.Vector3(target.x, target.y, target.z), (speedMap[this.brain.mode] || 3) * rage, this.brain.dangerLevel);
       // 游动气泡
       if (Math.random() < dt * 2.2) {
         this.particles.spawnBubbles(pPos.x, pPos.y + 0.5, pPos.z, 1, 0.6);

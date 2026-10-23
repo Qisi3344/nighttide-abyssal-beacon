@@ -74,7 +74,7 @@ bus.on('sfx:pickup', () => { crystalsTotal++; audio.pickup(); if (sm.runStats) s
 bus.on('sfx:repair-tick', () => audio.repairTick());
 bus.on('sfx:beacon', () => { audio.beacon(); if (sm.runStats) sm.runStats.beaconsLit++; });
 bus.on('sfx:victory', () => audio.victory());
-bus.on('objectives:core-unlocked', () => audio.ping());
+bus.on('objectives:core-unlocked', () => { audio.ping(); ui.flashRage(); });
 bus.on('predator:spotted', () => { audio.growl(); ui.flashSpot(); sm.runStats.spotted++; });
 bus.on('predator:bite', () => {
   if (!sm.running) return;
@@ -84,6 +84,11 @@ bus.on('predator:bite', () => {
   ui.flashDamage();
 });
 bus.on('game:bitten', () => audio.bite());
+bus.on('game:secret-found', () => {
+  if (sm.runStats) sm.runStats.secret = true;
+  audio.pickup();
+  setTimeout(() => audio.victory(), 300);
+});
 bus.on('oxygen:low', () => { audio.ping(); });
 bus.on('objectives:changed', ({ current }) => { ui.setObjective(current.text); ui.setCrystals(objectives.crystals); });
 

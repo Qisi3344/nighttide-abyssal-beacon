@@ -282,6 +282,16 @@ export class UIManager {
     el.classList.add('flash');
   }
 
+  /** 终局狂暴提示 */
+  flashRage() {
+    const el = this.el.spotWarn;
+    el.textContent = '三灯齐明 · 它愤怒了 —— 速去穹顶';
+    el.classList.remove('flash');
+    void el.offsetWidth;
+    el.classList.add('flash');
+    setTimeout(() => { el.textContent = '它看见你了'; }, 2600);
+  }
+
   flashDamage() {
     this.el.vgDamage.style.opacity = '1';
     setTimeout(() => { this.el.vgDamage.style.opacity = '0'; }, 260);
@@ -325,6 +335,7 @@ export class UIManager {
       <div class="stat-row"><span>点亮信标</span><b class="good">${stats.beaconsLit}/3</b></div>
       <div class="stat-row"><span>被咬次数</span><b class="${stats.hits > 0 ? 'bad' : 'good'}">${stats.hits}</b></div>
       <div class="stat-row"><span>被察觉</span><b>${stats.spotted} 次</b></div>
+      <div class="stat-row"><span>黑潮之心</span><b class="${stats.secret ? 'good' : ''}">${stats.secret ? '◈ 已寻获' : '未发现'}</b></div>
       <div class="stat-row"><span>${bestLine}</span><b></b></div>
     `;
     this.showScreen('end');
