@@ -114,6 +114,8 @@ const ui = new UIManager(uiRoot, {
     audio.applySettings(settings);
     cameraRig.sensitivity = settings.sensitivity;
     app3d.applyQuality(settings);
+    particles.motes.visible = settings.quality === 'high';
+    particles.spores.visible = settings.quality === 'high';
     ui.loadSettingsToUI(settings);
     save.saveSettings(settings);
   },
