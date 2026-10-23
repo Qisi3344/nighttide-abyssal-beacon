@@ -35,7 +35,7 @@ export class SaveSystem {
 
   saveBest(run) {
     const prev = this.loadBest();
-    const durationMs = run.durationMs ?? (run.endTime && run.startTime ? run.endTime - run.startTime : Infinity);
+    const durationMs = run.durationMs ?? (run.endTime != null && run.startTime != null ? run.endTime - run.startTime : Infinity);
     const prevValid = prev && Number.isFinite(prev.durationMs);
     const better = !prevValid || durationMs < prev.durationMs;
     if (!better) return prevValid ? prev : null;
