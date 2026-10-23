@@ -369,7 +369,17 @@ export class UIManager {
     const secs = Math.round((stats.endTime - stats.startTime) / 1000);
     const mm = String(Math.floor(secs / 60)).padStart(2, '0'), ss = String(secs % 60).padStart(2, '0');
     const bestLine = best ? `最快纪录 ${Math.floor(best.durationMs / 60000)}:${String(Math.round(best.durationMs / 1000) % 60).padStart(2, '0')}` : '尚无纪录';
+    // 称号:根据表现授予
+    let rank = '见习守灯人';
+    if (win) {
+      if (stats.hits === 0 && stats.secret) rank = '深渊舞者 · 与暗潮共生';
+      else if (stats.hits === 0) rank = '无声守灯人';
+      else if (stats.hits <= 2) rank = '逆流点灯者';
+      else rank = '伤痕累累的守灯人';
+      if ((stats.loreRead || 0) >= 3) rank += ' · 织灯站编年史官';
+    }
     this.el.endStats.innerHTML = `
+      <div class="stat-row"><span>称号</span><b class="good">${rank}</b></div>
       <div class="stat-row"><span>用时</span><b>${mm}:${ss}</b></div>
       <div class="stat-row"><span>收集光晶</span><b class="good">${stats.crystalsTotal ?? stats.crystals ?? 0} 枚</b></div>
       <div class="stat-row"><span>点亮信标</span><b class="good">${stats.beaconsLit}/3</b></div>
