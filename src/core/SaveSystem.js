@@ -35,9 +35,10 @@ export class SaveSystem {
 
   saveBest(run) {
     const prev = this.loadBest();
-    const better = !prev || run.durationMs < prev.durationMs;
+    const durationMs = run.durationMs ?? (run.endTime && run.startTime ? run.endTime - run.startTime : Infinity);
+    const better = !prev || durationMs < prev.durationMs;
     if (!better) return prev;
-    const best = { durationMs: run.durationMs, crystals: run.crystals, hits: run.hits, date: new Date().toISOString() };
+    const best = { durationMs, crystals: run.crystals, hits: run.hits, date: new Date().toISOString() };
     const settings = this.loadSettings();
     try { this.storage?.setItem(KEY, JSON.stringify({ settings, best })); } catch {}
     return best;

@@ -63,6 +63,13 @@ test('存档:最佳成绩只保留更快的', () => {
   assert.equal(save.loadBest().durationMs, 90000);
 });
 
+test('存档:startTime/endTime 也能算成绩', () => {
+  const store = memStorage();
+  const save = new SaveSystem(store);
+  save.saveBest({ startTime: 1000, endTime: 61000, crystals: 5, hits: 0 });
+  assert.equal(save.loadBest().durationMs, 60000);
+});
+
 test('存档:损坏数据安静回退', () => {
   const store = { getItem: () => '{{{not json', setItem: () => {} };
   const save = new SaveSystem(store);
