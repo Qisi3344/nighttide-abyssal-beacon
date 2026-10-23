@@ -205,6 +205,7 @@ canvas.addEventListener('click', () => {
 /* ============================== 主循环 ============================== */
 const clock = new THREE.Clock();
 let bubbleTimer = 0;
+let sonarTimer = 0;
 let rafLastAt = performance.now();   // rAF 最后驱动时刻(看门狗依据)
 let lastFrameAt = 0;                 // 任意驱动最后帧时刻(重入保护)
 let timeoutDriven = false;
@@ -299,6 +300,18 @@ function frame(fromTimeout = false) {
         }
       }
       ui.setPredatorProximity(proximity);
+
+      // 声纳导航:距最近未修信标 <70m 时周期轻 ping(音量随距离衰减)
+      sonarTimer -= dt;
+      if (sonarTimer <= 0) {
+        sonarTimer = 2.4;
+        let nearest = Infinity;
+        for (const b of WORLD.beacons) {
+          if (env.beaconViews.get(b.id).lit) continue;
+          nearest = Math.min(nearest, Math.hypot(b.x - player.position.x, b.z - player.position.z));
+        }
+        if (nearest < 70) audio.sonar(1 - nearest / 70);
+      }
 
       // 胜负(胜利由终局演出收尾)
       if (!alive) sm.endRun('defeat');

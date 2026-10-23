@@ -117,7 +117,7 @@ export class UIManager {
           <h2 id="end-title">信标长明</h2>
           <div class="sub-title" id="end-sub"></div>
           <div id="end-stats"></div>
-          <button class="nt-btn" id="btn-again">再 潜 一 次</button>
+          <button class="nt-btn primary" id="btn-again">再 潜 一 次</button>
           <button class="nt-btn" id="btn-end-title">返 回 标 题</button>
         </div>
       </div>

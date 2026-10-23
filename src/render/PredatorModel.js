@@ -80,6 +80,18 @@ export class PredatorModel {
         fin.rotation.x = -0.4;
         segGroup.add(fin);
       }
+      // 侧鳍(前段两节,锥形压扁,游动时随波动轻摆)
+      if (i === 2 || i === 3) {
+        for (const side of [-1, 1]) {
+          const pectoral = new THREE.Mesh(new THREE.ConeGeometry(0.34, r * 2.2, 4),
+            new THREE.MeshStandardMaterial({ color: 0x16222e, roughness: 0.7, transparent: true, opacity: 0.9 }));
+          pectoral.scale.z = 0.3;
+          pectoral.rotation.z = side * (Math.PI / 2) - side * 0.5;
+          pectoral.position.set(side * r * 0.9, -r * 0.15, 0.3);
+          segGroup.add(pectoral);
+          (this._pectoralFins = this._pectoralFins || []).push({ mesh: pectoral, side });
+        }
+      }
       this.group.add(segGroup);
       this.segments.push({ group: segGroup, radius: r });
     }
@@ -158,6 +170,13 @@ export class PredatorModel {
     this.jawTop.rotation.x = -jawOpen;
     this.jawBottom.rotation.x = jawOpen;
     this.eyeGlow.intensity = 1.0 + agitation * 2.2;
+
+    // 侧鳍随身体波动轻摆
+    if (this._pectoralFins) {
+      for (const f of this._pectoralFins) {
+        f.mesh.rotation.x = Math.sin(this._phase * 0.9 + f.side) * 0.35;
+      }
+    }
 
     return { x: forward.x, z: forward.z };
   }
