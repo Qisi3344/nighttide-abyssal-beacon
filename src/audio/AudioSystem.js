@@ -96,9 +96,10 @@ export class AudioSystem {
   ui() { this._tone(520, { type: 'square', a: 0.002, d: 0.06, peak: 0.05 }); }
   bubble() { this._tone(300 + Math.random() * 500, { type: 'sine', a: 0.005, d: 0.12, peak: 0.05, sweep: 900 + Math.random() * 400 }); }
 
-  pickup() {
-    this._tone(660, { a: 0.005, d: 0.18, peak: 0.16 });
-    setTimeout(() => this._tone(990, { a: 0.005, d: 0.3, peak: 0.14 }), 90);
+  pickup(combo = 0) {
+    const step = Math.pow(2, Math.min(combo, 8) / 12); // 连击升调,爽感
+    this._tone(660 * step, { a: 0.005, d: 0.18, peak: 0.16 });
+    setTimeout(() => this._tone(990 * step, { a: 0.005, d: 0.3, peak: 0.14 }), 90);
   }
 
   repairTick() { this._tone(180 + Math.random() * 80, { type: 'triangle', a: 0.003, d: 0.07, peak: 0.06 }); }

@@ -70,7 +70,7 @@ const audio = new AudioSystem();
 // 计分
 let crystalsTotal = 0;
 let cineState = null; // 终局演出状态 { t }
-bus.on('sfx:pickup', () => { crystalsTotal++; audio.pickup(); if (sm.runStats) sm.runStats.crystals = crystalsTotal; });
+bus.on('sfx:pickup', () => { crystalsTotal++; audio.pickup(crystalsTotal); if (sm.runStats) sm.runStats.crystals = crystalsTotal; });
 bus.on('sfx:repair-tick', () => audio.repairTick());
 bus.on('sfx:beacon', () => { audio.beacon(); if (sm.runStats) sm.runStats.beaconsLit++; });
 bus.on('sfx:victory', () => audio.victory());

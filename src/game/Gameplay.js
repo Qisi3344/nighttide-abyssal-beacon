@@ -230,6 +230,7 @@ export class Gameplay {
         });
         const speedMap = { [PredatorMode.PATROL]: 3.0, [PredatorMode.INVESTIGATE]: 4.4, [PredatorMode.CHASE]: 7.4, [PredatorMode.LUNGE]: 12.5, [PredatorMode.RETREAT]: 5.8 };
         const target = pred.brain.target || pred.brain.waypoints[0];
+        model.setRage(rage > 1 ? 1 : 0);
         model._lastFacing = model.update(dt, new THREE.Vector3(target.x, target.y, target.z), (speedMap[pred.brain.mode] || 3) * pred.speedScale * rage, pred.brain.dangerLevel);
         if (Math.random() < dt * 2.2) {
           this.particles.spawnBubbles(pPos.x, pPos.y + 0.5, pPos.z, 1, 0.6);

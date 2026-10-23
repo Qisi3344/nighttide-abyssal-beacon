@@ -49,6 +49,7 @@ export class PredatorModel {
     }
     // 眼
     const eyeGeo = new THREE.SphereGeometry(0.16, 8, 8);
+    this._spotMats = [spots];
     for (const side of [-1, 1]) {
       const eye = new THREE.Mesh(eyeGeo, spots);
       eye.position.set(side * 0.55, 0.28, 0.75);
@@ -105,6 +106,16 @@ export class PredatorModel {
     for (const s of this.segments) {
       s.group.position.set(0, 0, zOff);
       zOff -= this._segSpacing;
+    }
+    this.setRage(0);
+  }
+
+  /** 终局狂暴视觉:眼与体表荧光转炽白脉冲 */
+  setRage(r) {
+    this._rage = r;
+    this._spotsBase = this._spotsBase || 2.0;
+    if (this._spotMats) {
+      for (const m of this._spotMats) m.emissiveIntensity = this._spotsBase + r * 2.2;
     }
   }
 
