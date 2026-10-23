@@ -287,9 +287,16 @@ export class UIManager {
 
   flashSpot() {
     const el = this.el.spotWarn;
+    if (!this._spotOnce) {
+      this._spotOnce = true;
+      el.textContent = '它看见你了 —— 熄灯静止,或逃向信标之光';
+    } else {
+      el.textContent = '它看见你了';
+    }
     el.classList.remove('flash');
     void el.offsetWidth; // 重置动画
     el.classList.add('flash');
+    if (this._spotOnce) setTimeout(() => { el.textContent = '它看见你了'; }, 2400);
   }
 
   /** 终局狂暴提示 */
@@ -307,14 +314,18 @@ export class UIManager {
     setTimeout(() => { this.el.vgDamage.style.opacity = '0'; }, 260);
   }
 
+  /** 开场:黑幕盖住 → 淡入 + 字幕(两句顺序) */
   showIntro() {
-    // 开场:黑幕盖住 → 淡入 + 字幕
     const fb = this.el.fadeBlack;
     fb.classList.add('cover');
     void fb.offsetWidth;
     fb.classList.remove('cover');
+    this.el.intro.textContent = '海面之下 640 米 —— 三座信标都熄灭了';
     this.el.intro.classList.add('show');
-    setTimeout(() => this.el.intro.classList.remove('show'), 5200);
+    setTimeout(() => {
+      this.el.intro.textContent = '顶部罗盘指向信标 · ◇ 光晶会回应你的靠近';
+    }, 5200);
+    setTimeout(() => this.el.intro.classList.remove('show'), 10400);
   }
 
   /** 守卫接近度恐惧反馈:0(无)~1(贴脸) */
