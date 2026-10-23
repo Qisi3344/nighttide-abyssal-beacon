@@ -97,6 +97,11 @@ export class Gameplay {
     this.holdProgress = 0;
     this.coreProgress = 0;
     this.nearby = null;
+    for (const [, tv] of this.env.terminalViews || []) {
+      tv.read = false;
+      tv.screenMat.emissiveIntensity = 1.6;
+      tv.glow.intensity = 0.5;
+    }
     for (const b of WORLD.beacons) this.env.setBeaconLit(b.id, false);
     this.env.setCoreAwake(false);
   }
@@ -145,6 +150,21 @@ export class Gameplay {
     // ---- 交互目标发现 ----
     this.nearby = null;
     let holdActive = false;
+    // 档案终端优先(单次 E 读取)
+    for (const [, tv] of this.env.terminalViews) {
+      if (tv.read) continue;
+      const d = Math.hypot(pos.x - tv.def.x, pos.z - tv.def.z);
+      if (d < 3.2) {
+        this.nearby = { kind: 'terminal', id: tv.def.id, label: `按 E 读取「${tv.def.title}」`, key: 'KeyE' };
+        if (input.consumeInteract()) {
+          tv.read = true;
+          tv.screenMat.emissiveIntensity = 0.3;
+          tv.glow.intensity = 0;
+          this.bus.emit('game:lore', { title: tv.def.title, text: tv.def.text });
+        }
+        break;
+      }
+    }
     for (const b of WORLD.beacons) {
       if (this.env.beaconViews.get(b.id).lit) continue;
       const d = Math.hypot(pos.x - b.x, pos.z - b.z);

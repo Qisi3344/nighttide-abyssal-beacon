@@ -30,8 +30,32 @@ export class Environment {
     this._buildRuins();
     this._buildCoreDome();
     this._buildBeacons();
+    this._buildTerminals();
     this._buildRubble();
     this._buildGodRays();
+  }
+
+  /** 档案终端:小立柱+琥珀屏,调查后熄灭 */
+  _buildTerminals() {
+    this.terminalViews = new Map();
+    for (const t of WORLD.terminals) {
+      const g = new THREE.Group();
+      const y = this.terrain.heightAt(t.x, t.z);
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 1.6, 8), this._mats.dark);
+      post.position.set(t.x, y + 0.8, t.z);
+      post.castShadow = true;
+      g.add(post);
+      const screenMat = new THREE.MeshStandardMaterial({ color: 0x33220e, emissive: 0xffb35c, emissiveIntensity: 1.6, roughness: 0.4 });
+      const screen = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.55, 0.12), screenMat);
+      screen.position.set(t.x, y + 1.5, t.z);
+      screen.rotation.y = Math.PI * 0.25;
+      g.add(screen);
+      const glow = new THREE.PointLight(0xffb35c, 0.5, 6, 2);
+      glow.position.set(t.x, y + 1.6, t.z);
+      g.add(glow);
+      this.group.add(g);
+      this.terminalViews.set(t.id, { def: t, group: g, screenMat, glow, read: false });
+    }
   }
 
   /** 南口残骸船:扭曲舱段,故事的起点 */

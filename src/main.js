@@ -84,6 +84,11 @@ bus.on('predator:bite', () => {
   ui.flashDamage();
 });
 bus.on('game:bitten', () => audio.bite());
+bus.on('game:lore', (lore) => {
+  ui.showLore(lore);
+  audio.ui();
+  if (sm.runStats) sm.runStats.loreRead = (sm.runStats.loreRead || 0) + 1;
+});
 bus.on('game:secret-found', () => {
   if (sm.runStats) sm.runStats.secret = true;
   audio.pickup();

@@ -124,6 +124,11 @@ export class UIManager {
 
       <div class="intro-text" id="intro-text">海面之下 640 米 —— 三座信标都熄灭了</div>
       <div class="cinematic-text" id="cinematic-text"></div>
+      <div class="lore-panel panel" id="lore-panel">
+        <div class="lore-tag">ARCHIVE · 档案残片</div>
+        <div class="lore-title" id="lore-title"></div>
+        <div class="lore-text" id="lore-text"></div>
+      </div>
     `;
 
     const $ = (id) => this.root.querySelector('#' + id);
@@ -133,6 +138,7 @@ export class UIManager {
       compass: $('compass-strip'), interact: $('interact'), interactText: $('interact-text'), holdFill: $('hold-fill'),
       spotWarn: $('spot-warn'), vgDamage: $('vg-damage'), vgLow: $('vg-low'), vgPredator: $('vg-predator'),
       cinematic: $('cinematic-text'), canvas: document.getElementById('game-canvas'),
+      lorePanel: $('lore-panel'), loreTitle: $('lore-title'), loreText: $('lore-text'),
       screens: {
         title: $('screen-title'), pause: $('screen-pause'), settings: $('screen-settings'),
         help: $('screen-help'), end: $('screen-end'),
@@ -321,6 +327,15 @@ export class UIManager {
     this.el.cinematic.classList.remove('show');
   }
 
+  /** 档案残片浮层(显示后自动淡出) */
+  showLore({ title, text }) {
+    this.el.loreTitle.textContent = title;
+    this.el.loreText.textContent = text;
+    this.el.lorePanel.classList.add('show');
+    clearTimeout(this._loreTimer);
+    this._loreTimer = setTimeout(() => this.el.lorePanel.classList.remove('show'), 9000);
+  }
+
   showEnd(outcome, stats, best) {
     const win = outcome === 'victory';
     this.el.endTitle.textContent = win ? '信 标 长 明' : '沉 入 暗 潮';
@@ -335,6 +350,7 @@ export class UIManager {
       <div class="stat-row"><span>点亮信标</span><b class="good">${stats.beaconsLit}/3</b></div>
       <div class="stat-row"><span>被咬次数</span><b class="${stats.hits > 0 ? 'bad' : 'good'}">${stats.hits}</b></div>
       <div class="stat-row"><span>被察觉</span><b>${stats.spotted} 次</b></div>
+      <div class="stat-row"><span>档案残片</span><b class="${(stats.loreRead || 0) >= 3 ? 'good' : ''}">${stats.loreRead || 0}/3</b></div>
       <div class="stat-row"><span>黑潮之心</span><b class="${stats.secret ? 'good' : ''}">${stats.secret ? '◈ 已寻获' : '未发现'}</b></div>
       <div class="stat-row"><span>${bestLine}</span><b></b></div>
     `;
