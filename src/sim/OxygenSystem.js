@@ -3,7 +3,7 @@
  * 低于警戒线发警告事件,归零发死亡事件。
  */
 export class OxygenSystem {
-  constructor(emit, { max = 100, drainRate = 1.15, sprintDrainRate = 3.1, biteLoss = 26, regenRate = 9, lowThreshold = 25 } = {}) {
+  constructor(emit, { max = 100, drainRate = 0.92, sprintDrainRate = 2.8, biteLoss = 26, regenRate = 9, lowThreshold = 25 } = {}) {
     this.emit = emit || (() => {});
     this.max = max;
     this.drainRate = drainRate;

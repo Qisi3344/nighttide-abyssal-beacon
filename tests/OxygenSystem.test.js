@@ -11,13 +11,13 @@ function makeOxy(over = {}) {
 test('氧气:常态消耗速率正确', () => {
   const { oxy } = makeOxy();
   for (let i = 0; i < 100; i++) oxy.update(0.1, false); // 10s
-  assert.ok(Math.abs(oxy.value - (100 - 11.5)) < 0.01, `value=${oxy.value}`);
+  assert.ok(Math.abs(oxy.value - (100 - 9.2)) < 0.01, `value=${oxy.value}`);
 });
 
 test('氧气:冲刺消耗更快', () => {
   const { oxy } = makeOxy();
   for (let i = 0; i < 100; i++) oxy.update(0.1, true); // 10s
-  assert.ok(Math.abs(oxy.value - (100 - 31)) < 0.01, `value=${oxy.value}`);
+  assert.ok(Math.abs(oxy.value - (100 - 28)) < 0.01, `value=${oxy.value}`);
 });
 
 test('氧气:氧藻区回充', () => {
