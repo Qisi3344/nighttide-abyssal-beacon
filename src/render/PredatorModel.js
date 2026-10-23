@@ -10,18 +10,18 @@ const UP = new THREE.Vector3(0, 1, 0);
 const _m4 = new THREE.Matrix4();
 
 export class PredatorModel {
-  constructor() {
+  constructor(eyeColor = 0xff3fae) {
     this.group = new THREE.Group();
     this.head = new THREE.Group();
     this.group.add(this.head);
     this.segments = [];
     this._phase = 0;
-    this._build();
+    this._build(eyeColor);
   }
 
-  _build() {
+  _build(eyeColor) {
     const skin = new THREE.MeshStandardMaterial({ color: 0x121a24, roughness: 0.6, metalness: 0.3 });
-    const spots = new THREE.MeshStandardMaterial({ color: 0x1a0a14, emissive: 0xff3fae, emissiveIntensity: 2.0, roughness: 0.4 });
+    const spots = new THREE.MeshStandardMaterial({ color: 0x1a0a14, emissive: eyeColor, emissiveIntensity: 2.0, roughness: 0.4 });
 
     // 头:锥形吻 + 上下颚(可张合)+ 双眼
     const skull = new THREE.Mesh(new THREE.ConeGeometry(0.9, 2.6, 10), skin);
@@ -54,7 +54,7 @@ export class PredatorModel {
       eye.position.set(side * 0.55, 0.28, 0.75);
       this.head.add(eye);
     }
-    this.eyeGlow = new THREE.PointLight(0xff3fae, 1.4, 14, 1.8);
+    this.eyeGlow = new THREE.PointLight(eyeColor, 1.4, 14, 1.8);
     this.eyeGlow.position.set(0, 0.3, 0.8);
     this.head.add(this.eyeGlow);
 

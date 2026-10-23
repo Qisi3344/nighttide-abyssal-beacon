@@ -54,7 +54,7 @@ export class UIManager {
           <div class="title-rule"></div>
         </div>
         <div class="title-menu clickable">
-          <button class="nt-btn" id="btn-start">潜 入</button>
+          <button class="nt-btn primary" id="btn-start">潜 入</button>
           <button class="nt-btn" id="btn-help">操 作 说 明</button>
           <button class="nt-btn" id="btn-settings">设 置</button>
         </div>

@@ -62,13 +62,25 @@ export class Gameplay {
   }
 
   _buildPredator() {
-    this.predatorModel = new PredatorModel();
-    this.scene.add(this.predatorModel.group);
-    this.brain = new PredatorBrain(
-      (t, p) => this.bus.emit(t, p),
-      WORLD.predatorWaypoints.map(w => ({ ...w })),
-    );
-    this.predSpeed = 0;
+    this.predators = [];
+    const mk = (waypoints, eyeColor, speedScale, senseOver) => {
+      const model = new PredatorModel(eyeColor);
+      this.scene.add(model.group);
+      const brain = new PredatorBrain((t, p) => this.bus.emit(t, p), waypoints.map(w => ({ ...w })), senseOver);
+      this.predators.push({ model, brain, speedScale });
+    };
+    // 深渊守卫:中环全域巡游,品红眼,标准速度
+    mk(WORLD.predatorWaypoints, 0xff3fae, 1.0, undefined);
+    // 守望者:北区哨兵,琥珀眼,更慢但感知更远
+    mk(WORLD.sentinelWaypoints, 0xffb35c, 0.72, {
+      baseSenseRange: 23, lightSenseBonus: 30, stillSenseRange: 8.5,
+      noiseRange: 42, lungeRange: 3.0, lungeDuration: 0.55, biteCooldown: 3.2,
+      retreatDuration: 4.2, investigateGiveUp: 9.0, chaseGiveUp: 11.0, loseSenseRange: 32,
+      fovCos: Math.cos((150 / 2) * Math.PI / 180),
+    });
+    // 兼容旧引用
+    this.predatorModel = this.predators[0].model;
+    this.brain = this.predators[0].brain;
     this.predatorReady = true;
   }
 
@@ -77,14 +89,14 @@ export class Gameplay {
       c.taken = false;
       c.group.visible = true;
     }
-    this.brain.reset();
+    for (const p of this.predators || []) {
+      p.brain.reset();
+      const wp = p.brain.waypoints[0];
+      p.model.reset(new THREE.Vector3(wp.x, wp.y, wp.z));
+    }
     this.holdProgress = 0;
     this.coreProgress = 0;
     this.nearby = null;
-    if (this.predatorModel) {
-      const wp = WORLD.predatorWaypoints[0];
-      this.predatorModel.reset(new THREE.Vector3(wp.x, wp.y, wp.z));
-    }
     for (const b of WORLD.beacons) this.env.setBeaconLit(b.id, false);
     this.env.setCoreAwake(false);
   }
@@ -175,30 +187,33 @@ export class Gameplay {
       if (this.holdProgress === 0) this.holdTarget = null;
     }
 
-    // ---- 掠食者驱动 ----
+    // ---- 守卫驱动(双守卫:深渊守卫全域 + 北区守望者) ----
     if (this.predatorReady) {
-      const model = this.predatorModel;
       const playerLight = player.sprinting ? 1.0 : (player.speed > 1.2 ? 0.5 : 0.18);
       const beaconsLit = WORLD.beacons
         .filter(b => this.env.beaconViews.get(b.id).lit)
-        .map(b => ({ x: b.x, y: b.baseY, z: b.z, radius: 30 }));
-      const pPos = model.group.position;
-      const facing = model._lastFacing || { x: 0, z: 1 };
-      this.brain.update(dt, {
-        pos: { x: pPos.x, y: pPos.y, z: pPos.z },
-        facing,
-        playerPos: { x: pos.x, y: pos.y, z: pos.z },
-        playerLight, playerSpeed: player.speed, sprinting: player.sprinting,
-        beacons: beaconsLit,
-      });
-      const speedMap = { [PredatorMode.PATROL]: 3.0, [PredatorMode.INVESTIGATE]: 4.4, [PredatorMode.CHASE]: 7.4, [PredatorMode.LUNGE]: 12.5, [PredatorMode.RETREAT]: 5.8 };
-      // 终局狂暴:三信标齐后守卫提速(压迫终局节奏)
+        .map(b => {
+          const v = this.env.beaconViews.get(b.id);
+          return { x: b.x, y: v.baseY, z: b.z, radius: 30 };
+        });
       const rage = this.objectives.coreUnlocked ? 1.28 : 1.0;
-      const target = this.brain.target || WORLD.predatorWaypoints[0];
-      model._lastFacing = model.update(dt, new THREE.Vector3(target.x, target.y, target.z), (speedMap[this.brain.mode] || 3) * rage, this.brain.dangerLevel);
-      // 游动气泡
-      if (Math.random() < dt * 2.2) {
-        this.particles.spawnBubbles(pPos.x, pPos.y + 0.5, pPos.z, 1, 0.6);
+      for (const pred of this.predators) {
+        const model = pred.model;
+        const pPos = model.group.position;
+        const facing = model._lastFacing || { x: 0, z: 1 };
+        pred.brain.update(dt, {
+          pos: { x: pPos.x, y: pPos.y, z: pPos.z },
+          facing,
+          playerPos: { x: pos.x, y: pos.y, z: pos.z },
+          playerLight, playerSpeed: player.speed, sprinting: player.sprinting,
+          beacons: beaconsLit,
+        });
+        const speedMap = { [PredatorMode.PATROL]: 3.0, [PredatorMode.INVESTIGATE]: 4.4, [PredatorMode.CHASE]: 7.4, [PredatorMode.LUNGE]: 12.5, [PredatorMode.RETREAT]: 5.8 };
+        const target = pred.brain.target || pred.brain.waypoints[0];
+        model._lastFacing = model.update(dt, new THREE.Vector3(target.x, target.y, target.z), (speedMap[pred.brain.mode] || 3) * pred.speedScale * rage, pred.brain.dangerLevel);
+        if (Math.random() < dt * 2.2) {
+          this.particles.spawnBubbles(pPos.x, pPos.y + 0.5, pPos.z, 1, 0.6);
+        }
       }
     }
 
@@ -208,6 +223,7 @@ export class Gameplay {
   /** 被咬处理(main 挂接) */
   onBite(player, cameraRig) {
     const ok = this.oxygen.bite();
+    player.flinch();
     cameraRig.shake(0.5);
     this.bus.emit('game:bitten', {});
     return ok;

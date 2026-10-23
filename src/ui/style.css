@@ -50,6 +50,14 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #020a12; }
 }
 .nt-btn:hover { background: rgba(53, 240, 255, 0.14); border-color: var(--cyan); color: #fff; box-shadow: 0 0 18px rgba(53, 240, 255, 0.25); }
 .nt-btn:active { transform: translateY(1px); }
+.nt-btn.primary {
+  background: rgba(53, 240, 255, 0.12);
+  border-color: var(--cyan);
+  color: #fff;
+  font-size: 21px;
+  box-shadow: 0 0 22px rgba(53, 240, 255, 0.22);
+}
+.nt-btn.primary:hover { background: rgba(53, 240, 255, 0.22); box-shadow: 0 0 30px rgba(53, 240, 255, 0.4); }
 .nt-btn.danger { border-color: rgba(255, 63, 174, 0.4); }
 .nt-btn.danger:hover { background: rgba(255, 63, 174, 0.12); border-color: var(--magenta); box-shadow: 0 0 18px rgba(255, 63, 174, 0.25); }
 

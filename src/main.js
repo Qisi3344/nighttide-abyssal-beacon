@@ -289,11 +289,15 @@ function frame(fromTimeout = false) {
       const litMap = new Map(WORLD.beacons.map(b => [b.id, env.beaconViews.get(b.id).lit]));
       ui.updateCompass(cameraRig.yaw, player.position, litMap, objectives.coreUnlocked);
 
-      // 守卫接近恐惧反馈(品红边缘脉动)
-      const predDist = gameplay.predatorModel
-        ? gameplay.predatorModel.group.position.distanceTo(player.position) : 999;
-      const menacing = ['CHASE', 'LUNGE'].includes(gameplay.brain.mode);
-      const proximity = menacing ? Math.max(0, 1 - predDist / 26) : 0;
+      // 守卫接近恐惧反馈(品红边缘脉动,取最近的威胁守卫)
+      let proximity = 0;
+      if (gameplay.predators) {
+        for (const p of gameplay.predators) {
+          if (!['CHASE', 'LUNGE'].includes(p.brain.mode)) continue;
+          const d = p.model.group.position.distanceTo(player.position);
+          proximity = Math.max(proximity, Math.max(0, 1 - d / 26));
+        }
+      }
       ui.setPredatorProximity(proximity);
 
       // 胜负(胜利由终局演出收尾)
@@ -316,8 +320,13 @@ setInterval(() => {
   if (!timeoutDriven && performance.now() - rafLastAt > 250) {
     timeoutDriven = true;
     const loop = () => {
-      if (performance.now() - rafLastAt < 80) { timeoutDriven = false; return; } // rAF 已接管
-      frame(true);
+      try {
+        if (performance.now() - rafLastAt < 80) { timeoutDriven = false; return; } // rAF 已接管
+        frame(true);
+      } catch (err) {
+        console.error('[nighttide] frame error:', err);
+        timeoutDriven = false; // 允许看门狗重新介入,避免一次异常冻结整个游戏
+      }
       setTimeout(loop, 16);
     };
     loop();

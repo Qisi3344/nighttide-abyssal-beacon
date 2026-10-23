@@ -47,6 +47,12 @@ export const WORLD = {
     { x: 90, y: -8, z: 10 }, { x: 40, y: -7, z: 80 },
   ],
 
+  // 第二守卫"守望者":北区废墟塔群哨兵——更慢,但看得更远(琥珀眼)
+  sentinelWaypoints: [
+    { x: -50, y: -8, z: -100 }, { x: 10, y: -7, z: -135 },
+    { x: 55, y: -8, z: -105 }, { x: 15, y: -9, z: -85 },
+  ],
+
   regions: [
     { id: 'wreck', name: '南口残骸带', x: 0, z: 120, radius: 55 },
     { id: 'grove', name: '荧光林谷', x: -100, z: 25, radius: 60 },

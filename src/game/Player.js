@@ -29,9 +29,12 @@ export class Player {
     this.position.set(WORLD.spawn.x, WORLD.spawn.y, WORLD.spawn.z);
     this.velocity.set(0, 0, 0);
     this.yaw = WORLD.spawn.yaw;
+    this.hurtT = 0;
     this.model.group.position.copy(this.position);
     this.model.group.rotation.y = this.yaw;
   }
+
+  flinch() { this.hurtT = 0.6; }
 
   get speed() { return this.velocity.length(); }
 
@@ -84,12 +87,16 @@ export class Player {
 
     // --- 模型朝向与动画 ---
     const horiz = Math.hypot(this.velocity.x, this.velocity.z);
+    let turn = 0;
     if (horiz > 0.35) {
       const targetYaw = Math.atan2(this.velocity.x, this.velocity.z);
       let dy = targetYaw - this.yaw;
       while (dy > Math.PI) dy -= Math.PI * 2;
       while (dy < -Math.PI) dy += Math.PI * 2;
-      this.yaw += dy * Math.min(1, dt * 5.5);
+      const step = Math.min(1, dt * 5.5) * dy;
+      this.yaw += step;
+      // 转向侧倾:由本帧偏航步进驱动
+      turn = THREE.MathUtils.clamp(step / Math.max(dt, 1e-4) / 4, -1, 1);
     }
     this.model.group.position.copy(this.position);
     this.model.group.rotation.y = this.yaw;
@@ -100,7 +107,8 @@ export class Player {
     this.model.speed01 = this.speed01;
     this.model.sprint01 = this.sprinting ? 1 : 0;
     this.model.setLampIntensity(this.sprinting ? 7.5 : 3.4);
-    this.model.update(dt);
+    this.model.update(dt, turn, this.hurtT || 0);
+    if (this.hurtT > 0) this.hurtT = Math.max(0, this.hurtT - dt);
     if (this._aura) this._aura.position.copy(this.position);
 
     // 呼吸气泡

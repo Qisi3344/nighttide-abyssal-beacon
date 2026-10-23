@@ -103,8 +103,8 @@ export class DiverModel {
 
   setLampIntensity(v) { this.headlamp.intensity = v; }
 
-  /** 每帧驱动程序动画:双臂交替划水,双腿上下打水,速度越快摆越快 */
-  update(dt) {
+  /** 每帧驱动程序动画:双臂交替划水,双腿打水,速度越快摆越快;turnBank 为转向侧倾(-1..1) */
+  update(dt, turnBank = 0, hurtT = 0) {
     const move = Math.max(this.speed01, this.sprint01 * 0.2);
     this._phase += dt * (2.0 + move * 7.5);
     const swing = 0.35 + move * 1.05;
@@ -116,8 +116,15 @@ export class DiverModel {
     const legSwing = Math.sin(this._phase + Math.PI * 0.5) * (0.28 + move * 0.75);
     this.legs[0].rotation.x = legSwing;
     this.legs[1].rotation.x = legSwing;
-    // 躯干轻微起伏
+    // 躯干轻微起伏 + 转向侧倾(banking)
     this.torso.position.y = Math.sin(this._phase * 0.5) * 0.06;
     this.torso.rotation.x = -move * 0.18; // 游起来身体前倾
+    this.torso.rotation.z = THREE.MathUtils.clamp(-turnBank * 0.5, -0.4, 0.4);
+    // 受击痉挛
+    if (hurtT > 0) {
+      this.torso.position.x = Math.sin(hurtT * 60) * 0.12 * hurtT;
+    } else {
+      this.torso.position.x = 0;
+    }
   }
 }

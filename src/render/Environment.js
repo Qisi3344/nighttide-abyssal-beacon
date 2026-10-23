@@ -197,8 +197,15 @@ export class Environment {
       );
       shaft.position.set(b.x, py + 40, b.z);
       g.add(shaft);
+      // 未点亮时的极暗引导微束(远处可辨"这里有个目标")
+      const hint = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.25, 0.9, 46, 8, 1, true),
+        new THREE.MeshBasicMaterial({ color: 0x2e7d8f, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false })
+      );
+      hint.position.set(b.x, py + 30, b.z);
+      g.add(hint);
       this.group.add(g);
-      this.beaconViews.set(b.id, { def: b, group: g, crystal, rings, light, shaft, baseY: py, lit: false, pulse: this.rng.range(0, 6) });
+      this.beaconViews.set(b.id, { def: b, group: g, crystal, rings, light, shaft, hint, baseY: py, lit: false, pulse: this.rng.range(0, 6) });
     }
   }
 
@@ -253,6 +260,7 @@ export class Environment {
     v.crystal.material.emissiveIntensity = lit ? 3.2 : 0.35;
     v.light.intensity = lit ? 3.2 : 0;
     v.shaft.material.opacity = lit ? 0.16 : 0;
+    v.hint.material.opacity = lit ? 0 : 0.06; // 点亮后引导微束功成身退
     for (const r of v.rings) r.material.emissiveIntensity = lit ? 2.2 : 0.35;
   }
 

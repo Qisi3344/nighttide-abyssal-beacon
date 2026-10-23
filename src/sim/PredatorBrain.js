@@ -34,9 +34,9 @@ function dist2d(ax, ay, az, bx, by, bz) {
 }
 
 export class PredatorBrain {
-  constructor(emit, homeWaypoints, cfg = CFG) {
+  constructor(emit, homeWaypoints, cfgOverride = null) {
     this.emit = emit || (() => {});
-    this.cfg = cfg;
+    this.cfg = { ...CFG, ...(cfgOverride || {}) };
     this.waypoints = homeWaypoints; // [{x,y,z}]
     this.reset();
   }
