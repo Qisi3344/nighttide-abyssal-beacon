@@ -70,6 +70,15 @@ test('存档:startTime/endTime 也能算成绩', () => {
   assert.equal(save.loadBest().durationMs, 60000);
 });
 
+test('存档:历史坏纪录(非有限数)会被好成绩覆盖', () => {
+  const store = memStorage();
+  store.setItem('nighttide.save.v1', JSON.stringify({ settings: {}, best: { durationMs: undefined, crystals: 0, hits: 0 } }));
+  const save = new SaveSystem(store);
+  const best = save.saveBest({ startTime: 0, endTime: 90000, crystals: 12, hits: 1 });
+  assert.equal(best.durationMs, 90000);
+  assert.equal(save.loadBest().durationMs, 90000);
+});
+
 test('存档:损坏数据安静回退', () => {
   const store = { getItem: () => '{{{not json', setItem: () => {} };
   const save = new SaveSystem(store);
